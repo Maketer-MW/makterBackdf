@@ -46,6 +46,9 @@ app.get("/api/v1/restaurants", restCtrl.restrs);
 // 예시: 식당 단건 조회
 app.get("/api/v1/restaurants/:restaurants_id", restCtrl.restr);
 
+// 예시 : 특정 카테고리의 식당 정보 조회
+app.get("/api/v1/restaurants/category/:category", restCtrl.restc);
+
 // 예시: 리뷰 생성
 app.post("/api/v1/reviews", reviewCtrl.createreview);
 
@@ -55,11 +58,13 @@ app.put("/api/v1/reviews/:review_id", reviewCtrl.remotereview);
 // 예시: 리뷰 삭제
 app.delete("/api/v1/reviews/:review_id", reviewCtrl.deletereview);
 
-// 모든 리뷰 조회
-app.get("/api/v1/reviews/:review_id", reviewCtrl.getAllReviews);
+// 식당별 리뷰 조회
+app.get("/api/v1/reviews/:restaurant_id", reviewCtrl.getReviews);
 
 // 예시: 특정 식당의 리뷰 목록 조회
 app.get("/api/v1/restaurants/reviews", reviewCtrl.restreview);
+
+app.get("/api/tags", reviewCtrl.getHashtags);
 
 app.get("/", (req, res) => {
   res.send("Hello World!");
