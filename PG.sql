@@ -57,7 +57,6 @@ create table reviews_hashtags (
 	hashtags_id SERIAL not null,
 	foreign key (reviews_id) references reviews(id) on delete cascade,
 	FOREIGN KEY (hashtags_id) REFERENCES hashtags(id) ON DELETE CASCADE
-)
 
 -- 리뷰 테이블에 샘플 데이터 삽입
 INSERT INTO reviews (username, contents, date, rating, restaurant_id)
