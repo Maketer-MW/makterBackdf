@@ -6,6 +6,7 @@ import dotenv from "dotenv";
 // 컨트롤러 임포트
 import restCtrl from "./app/src/restaurants/restaurants.ctrl.js";
 import reviewCtrl from "./app/src/Reviews/review.ctrl.js";
+import CumintyCtrl from "./app/src/Cuminte/Cuminty.ctrl.js";
 const { Pool } = pkg;
 /* 
 Postgres cluster makterback created
@@ -65,6 +66,21 @@ app.get("/api/v1/reviews/:restaurant_id", reviewCtrl.getReviews);
 app.get("/api/v1/restaurants/reviews", reviewCtrl.restreview);
 
 app.get("/api/tags", reviewCtrl.getHashtags);
+
+// 커뮤니티 포스트 다건 조회
+app.get("/api/v1/posts", CumintyCtrl.posts);
+
+// 커뮤니티 포스트 단건 조회
+app.get("/api/v1/post/:post_id", CumintyCtrl.post);
+
+// 커뮤니티 포스트 생성
+app.post("/api/v1/post", CumintyCtrl.createpost);
+
+// 커뮤니티 포스트 수정
+app.put("/api/v1/post/:post_id", CumintyCtrl.remotepost);
+
+// 커뮤니티 포스트 삭제
+app.delete("/api/v1/post/:post_id", CumintyCtrl.deletepost);
 
 app.get("/", (req, res) => {
   res.send("Hello World!");

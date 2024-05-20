@@ -29,6 +29,11 @@ CREATE TABLE restaurants (
    longitude DECIMAL(11, 8) NOT NULL
 );
 
+-- 식당의 카테고리 (category) 판매메뉴 (food_menu)  
+ALTER TABLE restaurants
+ADD category VARCHAR(100),
+ADD food_menu JSONB;
+
 
 -- reviews 테이블 생성
 CREATE TABLE reviews (
@@ -46,7 +51,6 @@ create table hashtags (
   id SERIAL PRIMARY KEY,
   contents VARCHAR(32) NOT NULL
 )
-
 -- 리뷰-해시태그 매핑 테이블 생성
 create table reviews_hashtags (
 	reviews_id SERIAL not null,
@@ -63,6 +67,7 @@ VALUES ('John Doe', 'This restaurant is amazing!', '2024-04-12', 4.5, 1);
 -- 해시태그 테이블에 샘플 데이터 삽입
 INSERT INTO hashtags (contents)
 VALUES ('delicious');
+
 
 
 -- 리뷰-해시태그 매핑 테이블에 샘플 데이터 삽입
@@ -87,33 +92,49 @@ INNER JOIN
     hashtags as h ON rh.hashtags_id = h.id;
 
 
-
 -- posts 테이블 생성
 CREATE TABLE posts (
    post_id SERIAL PRIMARY KEY,
-   title CHAR(100) NOT NULL,
-   content CHAR(100) NOT NULL,
-   post_date CHAR(100) NOT NULL,
-   user_id INT NOT NULL REFERENCES users(user_id),
-   restaurants_id INT NOT NULL REFERENCES restaurants(restaurants_id)
+   title VARCHAR(100) NOT NULL,
+   content TEXT NOT NULL,
+   post_date TIMESTAMP NOT NULL
 );
 
+SELECT * FROM posts;
+
+INSERT INTO posts (title, content, post_date) VALUES ('테스트 제목', '테스트 내용', '2023-05-11T12:00:00Z') RETURNING *;
 -- comments 테이블 생성
 CREATE TABLE comments (
    id SERIAL PRIMARY KEY,
    comment_text CHAR(100) NOT NULL,
    comment_date CHAR(100) NOT NULL,
-   user_id INT NOT NULL REFERENCES users(user_id),
+   user_id uuid NOT NULL REFERENCES users(user_id),
    post_id INT NOT NULL REFERENCES posts(post_id)
 );
 
 -- restaurants 테이블에 데이터 삽입
-INSERT INTO restaurants (restaurants_name, address, phone, opening_hours, rating, taste_level, image, latitude, longitude)
-VALUES ('대전 성심당', '대전광역시 중구', '042-1234-5678', '07:00 - 22:00', 4.8, '{"sweet": 5, "salty": 4, "sour": 3, "bitter": 2}', 'https://blog.lgchem.com/wp-content/uploads/2014/10/ssd_1030-1.jpg', 36.350412, 127.384548);
+INSERT INTO restaurants (restaurants_name, address, phone, opening_hours, rating, taste_level, image, latitude, longitude, category, food_menu)
+VALUES ('대전 성심당', '대전광역시 중구', '042-1234-5678', '07:00 - 22:00', 4.8, '{"sweet": 5, "salty": 4, "sour": 3, "bitter": 2}', 'https://blog.lgchem.com/wp-content/uploads/2014/10/ssd_1030-1.jpg', 36.350412, 127.384548, '디저트', '{"menus":[{"name":"튀김소보루"},{"name":"작은 메아리"}]}');
 
+INSERT INTO restaurants (restaurants_name, address, phone, opening_hours, rating, taste_level, image, latitude, longitude, category, food_menu)
+VALUES ('정동문화사', '대전광역시 동구 중동 9-19', '070-8800-0231', '12:00 - 17:00', 4.6, '{"sweet": 5, "salty": 2, "sour": 2, "bitter": 1}', 'https://d12zq4w4guyljn.cloudfront.net/750_750_20240421013559_photo1_b33d20f05cd7.jpg', 36.332462, 127.430195, '디저트', '{"menus":[{"name":"까눌레"},{"name":"휘낭시"}]}');
+
+INSERT INTO restaurants (restaurants_name, address, phone, opening_hours, rating, taste_level, image, latitude, longitude, category, food_menu)
+VALUES ('오시우커피', '대전광역시 중구 은행동 137-28', '010-5940-5601', '11:00 - 22:00', 4.3, '{"sweet": 5, "salty": 3, "sour": 4, "bitter": 1}', 'https://d12zq4w4guyljn.cloudfront.net/750_750_20240325094338_photo1_f6b6f07b001a.jpg', 36.329440, 127.426248, '디저트', '{"menus":[{"name":"오시우베리"},{"name":"오시우플로"}]}');
+
+INSERT INTO restaurants (restaurants_name, address, phone, opening_hours, rating, taste_level, image, latitude, longitude, category, food_menu)
+VALUES ('소신', '대전광역시 유성구 궁동 429-5', '010-8558-9746', '12:00 - 22:00', 4.6, '{"sweet": 5, "salty": 2, "sour": 5, "bitter": 1}', 'https://d12zq4w4guyljn.cloudfront.net/750_750_20240507084554_photo1_6b3613a2d905.jpg', 36.361609, 127.352716, '디저트', '{"menus":[{"name":"유자타르트"},{"name":"바닐라 미깡"}]}');
+
+
+SELECT * FROM restaurants;
 
 INSERT INTO restaurants (restaurants_name, address, phone, opening_hours, rating, taste_level, image, latitude, longitude)
 VALUES ('이태리국시 본점', '대전 서구 둔산로31번길 31 2층', '042-485-0950', '11:30 - 22:00', 4.8, '{"sweet": 2, "salty": 4, "sour": 2, "bitter": 2}', 'https://search.pstatic.net/common/?src=https%3A%2F%2Fldb-phinf.pstatic.net%2F20230616_205%2F1686845894665KQdXt_JPEG%2FKakaoTalk_Photo_2023-06-16-01-17-32_007.jpeg', 36.353304, 127.377901);
+
+
+INSERT INTO restaurants (restaurants_name, address, phone, opening_hours, rating, taste_level, image, latitude, longitude, category, food_menu)
+VALUES ('카페길우 전민점', '대전광역시 유성구 전민동 385-9', '010-3454-3838', '10:00~11:20', 4.4, '{"sweet": 4, "salty": 3, "sour": 2, "bitter": 1}', 'https://lh5.googleusercontent.com/p/AF1QipPTnJA4a3gZarNqxr5Cf2MNcqkH02--1Wz2iyDN=w507-h240-k-no', 36.396861, 127.404639, '카페', '{"menu1": "수플레"}');
+
 
 
 INSERT INTO restaurants (restaurants_name, address, phone, opening_hours, rating, taste_level, image, latitude, longitude)
