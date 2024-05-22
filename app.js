@@ -10,17 +10,18 @@ import CumintyCtrl from "./app/src/Cuminte/Cuminty.ctrl.js";
 const { Pool } = pkg;
 /* 
 Postgres cluster makterback created
-  Username:    postgres
-  Password:    ldP6Kqw4w7nhIPM
-  Hostname:    makterback.internal
-  Flycast:     fdaa:5:35c8:0:1::1d
-  Proxy port:  5432
-  Postgres port:  5433
-  Connection string: postgres://postgres:ldP6Kqw4w7nhIPM@makterback.flycast:5432
+   Username:    postgres
+    Password:    qAH7KXJjlLFpgH6
+    Hostname:    makterdb.internal
+    Flycast:     fdaa:5:35c8:0:1::22
+    Proxy port:  5432
+    Postgres port:  5433
+    Connection string: postgres://postgres:qAH7KXJjlLFpgH6@makterdb.flycast:5432
   */
+
 const pool = new Pool({
   user: "postgres",
-  password: "ldP6Kqw4w7nhIPM",
+  password: "qAH7KXJjlLFpgH6",
   host: "127.0.0.1",
   database: "postgres",
   port: 5432,
@@ -52,9 +53,6 @@ app.get("/api/v1/restaurants/category/:category", restCtrl.restc);
 
 // 예시: 리뷰 생성
 app.post("/api/v1/reviews", reviewCtrl.createreview);
-
-// 예시: 리뷰 수정
-app.put("/api/v1/reviews/:review_id", reviewCtrl.remotereview);
 
 // 예시: 리뷰 삭제
 app.delete("/api/v1/reviews/:review_id", reviewCtrl.deletereview);
