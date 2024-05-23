@@ -36,7 +36,7 @@ app.use(express.json());
 app.use(
   cors({
     origin: "*",
-    methods: ["GET", "POST"],
+    methods: ["GET", "POST", "DELETE", "PUT"],
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization", "token"], // "token" 헤더를 허용합니다.
   })

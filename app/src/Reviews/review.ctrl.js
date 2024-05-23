@@ -72,6 +72,7 @@ const createreview = async (req, res) => {
   }
 };
 
+// 리뷰 삭제
 const deletereview = async (req, res) => {
   try {
     const { review_id } = req.params;
