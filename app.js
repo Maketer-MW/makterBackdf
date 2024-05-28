@@ -7,6 +7,7 @@ import dotenv from "dotenv";
 import restCtrl from "./app/src/restaurants/restaurants.ctrl.js";
 import reviewCtrl from "./app/src/Reviews/review.ctrl.js";
 import CumintyCtrl from "./app/src/Cuminte/Cuminty.ctrl.js";
+import CommentsCtrl from "./app/src/Cuminte/Comments.ctrl.js";
 const { Pool } = pkg;
 /* 
 Postgres cluster makterback created
@@ -42,10 +43,10 @@ app.use(
   })
 );
 
-// 예시: get 식당 정보 조회
+// 식당 정보 다건 조회
 app.get("/api/v1/restaurants", restCtrl.restrs);
 
-// 예시: 식당 단건 조회
+// 식당 단건 조회
 app.get("/api/v1/restaurants/:restaurants_id", restCtrl.restr);
 
 // 예시 : 특정 카테고리의 식당 정보 조회
@@ -80,10 +81,27 @@ app.put("/api/v1/post/:post_id", CumintyCtrl.remotepost);
 // 커뮤니티 포스트 삭제
 app.delete("/api/v1/post/:post_id", CumintyCtrl.deletepost);
 
+// 댓글 다건 조회
+app.get("/api/v1/comments", CommentsCtrl.comments);
+
+// 댓글 단건 조회
+app.get("/api/v1/comments/:commentId", CommentsCtrl.comment);
+
+// 댓글 생성
+app.post("/api/v1/post/:post_id/comments", CommentsCtrl.createcomment);
+
+// 댓글 삭제
+app.delete(
+  "/api/v1/post/:post_id/comments/:commentid",
+  CommentsCtrl.deletecomment
+);
+
+// 특정 포스트에 대한 댓글 조회
+app.get("/api/v1/post/:postId/comments", CommentsCtrl.getCommentsByPostId);
+
 app.get("/", (req, res) => {
   res.send("Hello World!");
 });
-
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

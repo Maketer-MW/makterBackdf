@@ -132,12 +132,11 @@ SELECT * FROM posts;
 INSERT INTO posts (title, content, post_date) VALUES ('테스트 제목', '테스트 내용', '2023-05-11T12:00:00Z') RETURNING *;
 
 
--- comments 테이블 생성
+-- 댓글
 CREATE TABLE comments (
-   id SERIAL PRIMARY KEY,
-   comment_text CHAR(100) NOT NULL,
-   comment_date CHAR(100) NOT NULL,
-   user_id uuid NOT NULL REFERENCES users(user_id),
+   commentid SERIAL PRIMARY KEY,
+   comment_text TEXT NOT NULL,
+   comment_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
    post_id INT NOT NULL REFERENCES posts(post_id)
 );
 
