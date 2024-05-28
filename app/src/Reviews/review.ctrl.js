@@ -124,7 +124,7 @@ const getReviews = async (req, res) => {
         r.contents AS review_contents,
         r.date AS review_date,
         r.rating,
-        h.contents AS hashtag
+        array_agg(h.contents) AS hashtags
       FROM 
         reviews AS r
       INNER JOIN
@@ -133,6 +133,8 @@ const getReviews = async (req, res) => {
         hashtags AS h ON rh.hashtags_id = h.id
       WHERE
         r.restaurant_id = $1
+      GROUP BY
+        r.id, r.username, r.contents, r.date, r.rating;
       `,
       [restaurant_id]
     );
