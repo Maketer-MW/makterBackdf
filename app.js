@@ -2,23 +2,18 @@ import express from "express";
 import cors from "cors";
 import pkg from "pg";
 import dotenv from "dotenv";
+import session from "express-session";
 
 // 컨트롤러 임포트
 import restCtrl from "./app/src/restaurants/restaurants.ctrl.js";
 import reviewCtrl from "./app/src/Reviews/review.ctrl.js";
 import CumintyCtrl from "./app/src/Cuminte/Cuminty.ctrl.js";
 import CommentsCtrl from "./app/src/Cuminte/Comments.ctrl.js";
+import userCtrl from "./app/src/Users/user.ctrl.js";
+
 const { Pool } = pkg;
-/* 
-Postgres cluster makterback created
-   Username:    postgres
-    Password:    qAH7KXJjlLFpgH6
-    Hostname:    makterdb.internal
-    Flycast:     fdaa:5:35c8:0:1::22
-    Proxy port:  5432
-    Postgres port:  5433
-    Connection string: postgres://postgres:qAH7KXJjlLFpgH6@makterdb.flycast:5432
-  */
+
+dotenv.config();
 
 const pool = new Pool({
   user: "postgres",
@@ -29,80 +24,88 @@ const pool = new Pool({
 });
 
 const app = express();
-dotenv.config();
 
 // 기본 설정
 app.use(express.json());
 
 app.use(
   cors({
-    origin: "*",
+    origin: "http://localhost:5173", // 클라이언트가 실행 중인 도메인 및 포트
     methods: ["GET", "POST", "DELETE", "PUT"],
-    credentials: true,
-    allowedHeaders: ["Content-Type", "Authorization", "token"], // "token" 헤더를 허용합니다.
+    credentials: true, // 쿠키 포함 여부
+    allowedHeaders: ["Content-Type", "Authorization", "token"],
   })
 );
 
-// 식당 정보 다건 조회
-app.get("/api/v1/restaurants", restCtrl.restrs);
-
-// 식당 단건 조회
-app.get("/api/v1/restaurants/:restaurants_id", restCtrl.restr);
-
-// 예시 : 특정 카테고리의 식당 정보 조회
-app.get("/api/v1/restaurants/category/:category", restCtrl.restc);
-
-// 예시: 리뷰 생성
-app.post("/api/v1/reviews", reviewCtrl.createreview);
-
-// 예시: 리뷰 삭제
-app.delete("/api/v1/reviews/:review_id", reviewCtrl.deletereview);
-
-// 식당별 리뷰 조회
-app.get("/api/v1/reviews/:restaurant_id", reviewCtrl.getReviews);
-
-// 예시: 특정 식당의 리뷰 목록 조회
-app.get("/api/v1/restaurants/reviews", reviewCtrl.restreview);
-
-app.get("/api/tags", reviewCtrl.getHashtags);
-
-// 커뮤니티 포스트 다건 조회
-app.get("/api/v1/posts", CumintyCtrl.posts);
-
-// 커뮤니티 포스트 단건 조회
-app.get("/api/v1/post/:post_id", CumintyCtrl.post);
-
-// 커뮤니티 포스트 생성
-app.post("/api/v1/post", CumintyCtrl.createpost);
-
-// 커뮤니티 포스트 수정
-app.put("/api/v1/post/:post_id", CumintyCtrl.remotepost);
-
-// 커뮤니티 포스트 삭제
-app.delete("/api/v1/post/:post_id", CumintyCtrl.deletepost);
-
-// 댓글 다건 조회
-app.get("/api/v1/comments", CommentsCtrl.comments);
-
-// 댓글 단건 조회
-app.get("/api/v1/comments/:commentId", CommentsCtrl.comment);
-
-// 댓글 생성
-app.post("/api/v1/post/:post_id/comments", CommentsCtrl.createcomment);
-
-// 댓글 삭제
-app.delete(
-  "/api/v1/post/:post_id/comments/:commentid",
-  CommentsCtrl.deletecomment
+// express-session 미들웨어 설정
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || "your-secret-key",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: false, // HTTPS가 아닌 경우 false로 설정
+      httpOnly: true,
+      sameSite: "Lax", // Lax, Strict, None 중 선택 (테스트 환경에 따라 None으로 설정)
+      maxAge: 1000 * 60 * 60 * 24, // 1일 동안 세션 유지
+    },
+  })
 );
 
-// 특정 포스트에 대한 댓글 조회
+// 로그인 체크 미들웨어
+const isLoggedIn = (req, res, next) => {
+  if (req.session && req.session.userId) {
+    next();
+  } else {
+    res.status(401).json({
+      resultCode: "F-2",
+      msg: "로그인이 필요합니다.",
+    });
+  }
+};
+
+// API 라우트 정의
+app.get("/api/v1/restaurants", restCtrl.restrs);
+app.get("/api/v1/restaurants/:restaurants_id", restCtrl.restr);
+app.get("/api/v1/restaurants/category/:category", restCtrl.restc);
+app.post("/api/v1/reviews", isLoggedIn, reviewCtrl.createreview);
+app.delete("/api/v1/reviews/:review_id", isLoggedIn, reviewCtrl.deletereview);
+app.get("/api/v1/reviews/:restaurant_id", reviewCtrl.getReviews);
+app.get("/api/v1/restaurants/reviews", reviewCtrl.restreview);
+app.get("/api/tags", reviewCtrl.getHashtags);
+app.post("/api/v1/register", userCtrl.register);
+app.post("/api/v1/login", userCtrl.login);
+app.post("/api/v1/logout", userCtrl.logout);
+app.post("/api/v1/reset-password", userCtrl.requestPasswordReset);
+app.post("/api/v1/reset-password/:token", userCtrl.resetPassword);
+app.get("/api/v1/check-session", userCtrl.checkSession);
+app.get("/api/v1/profile", isLoggedIn, userCtrl.getProfile);
+app.put("/api/v1/profile", isLoggedIn, userCtrl.updateProfile);
+app.get("/api/v1/posts", CumintyCtrl.posts);
+app.get("/api/v1/post/:post_id", CumintyCtrl.post);
+app.post("/api/v1/post", isLoggedIn, CumintyCtrl.createpost);
+app.put("/api/v1/post/:post_id", isLoggedIn, CumintyCtrl.remotepost);
+app.delete("/api/v1/post/:post_id", isLoggedIn, CumintyCtrl.deletepost);
+app.get("/api/v1/comments", CommentsCtrl.comments);
+app.get("/api/v1/comments/:commentId", CommentsCtrl.comment);
+app.post(
+  "/api/v1/post/:post_id/comments",
+  isLoggedIn,
+  CommentsCtrl.createcomment
+);
+app.delete(
+  "/api/v1/post/:post_id/comments/:commentid",
+  isLoggedIn,
+  CommentsCtrl.deletecomment
+);
 app.get("/api/v1/post/:postId/comments", CommentsCtrl.getCommentsByPostId);
 
 app.get("/", (req, res) => {
   res.send("Hello World!");
 });
+
 const PORT = process.env.PORT || 3000;
+
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });

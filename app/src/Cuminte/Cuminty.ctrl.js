@@ -52,6 +52,13 @@ const post = async (req, res) => {
 
 // 생성
 const createpost = async (req, res) => {
+  if (!req.session || !req.session.userId) {
+    return res.status(401).json({
+      resultCode: "F-2",
+      msg: "로그인이 필요합니다.",
+    });
+  }
+
   try {
     const { post_title, post_content, post_date } = req.body;
     console.log("Received Data:", req.body); // 입력 값 확인을 위한 로그
@@ -61,7 +68,7 @@ const createpost = async (req, res) => {
       VALUES ($1, $2, $3)
       RETURNING *
     `;
-    const values = [post_title, post_content, post_date];
+    const values = [post_title, post_content, post_date || new Date(), userId];
 
     const { rows } = await pool.query(query, values);
     console.log("Query Result:", rows); // 쿼리 결과 확인을 위한 로그

@@ -48,6 +48,13 @@ const comment = async (req, res) => {
 
 // 생성
 const createcomment = async (req, res) => {
+  if (!req.session || !req.session.userId) {
+    return res.status(401).json({
+      resultCode: "F-2",
+      msg: "로그인이 필요합니다.",
+    });
+  }
+
   try {
     const { post_id: postId } = req.params; // postId로 변경
     const { comment_text, comment_date } = req.body;
@@ -58,7 +65,7 @@ const createcomment = async (req, res) => {
           VALUES ($1, $2,$3)
           RETURNING *
         `;
-    const values = [postId, comment_text, comment_date];
+    const values = [postId, comment_text, comment_date || new Date(), userId];
 
     const { rows } = await pool.query(query, values);
     console.log("Query Result:", rows); // 쿼리 결과 확인을 위한 로그
