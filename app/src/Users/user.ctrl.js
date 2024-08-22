@@ -1,6 +1,7 @@
 import { pool } from "../../../app.js";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
+import nodemailer from "nodemailer";
 
 /* 사용자 회원가입 */
 const register = async (req, res) => {
@@ -88,27 +89,32 @@ const login = async (req, res) => {
         msg: "아이디 또는 비밀번호가 일치하지 않습니다.",
       });
     }
+    // 로그인 성공, 세션 ID 재생성
+    req.session.regenerate((err) => {
+      if (err) {
+        return res.status(500).json({ msg: "Session regeneration failed" });
+      }
 
-    // 2. 세션에 사용자 ID 저장
-    req.session.userId = user.id;
+      // 2. 세션에 사용자 ID 저장
+      req.session.userId = user.id;
 
-    console.log("세션에 저장된 userId:", req.session.userId); // 디버깅을 위한 로그
+      console.log("세션에 저장된 userId:", req.session.userId); // 디버깅을 위한 로그
 
-    // 3. 세션이 설정된 후 응답을 전송하면, express-session 미들웨어가 쿠키를 자동으로 설정함
-    res.json({
-      resultCode: "S-1",
-      msg: "로그인 성공",
-      data: {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        full_name: user.full_name,
-        phone_number: user.phone_number,
-        created_at: user.created_at,
-      },
-      sessionId: req.sessionID,
+      // 3. 세션이 설정된 후 응답을 전송하면, express-session 미들웨어가 쿠키를 자동으로 설정함
+      res.json({
+        resultCode: "S-1",
+        msg: "로그인 성공",
+        data: {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          full_name: user.full_name,
+          phone_number: user.phone_number,
+          created_at: user.created_at,
+        },
+        sessionId: req.sessionID,
+      });
     });
-
     // 4. 이 시점에서 클라이언트로 쿠키가 전송됨
   } catch (error) {
     console.error("Error logging in user:", error);
@@ -123,6 +129,7 @@ const login = async (req, res) => {
 
 /* 사용자 로그아웃 */
 const logout = (req, res) => {
+  // 세션이 없거나 이미 로그아웃된 상태인지 확인
   if (!req.session || !req.session.userId) {
     return res.status(400).json({
       resultCode: "F-3",
@@ -138,9 +145,20 @@ const logout = (req, res) => {
         msg: "로그아웃 중 에러 발생",
       });
     }
-    // 클라이언트 측 쿠키를 삭제
-    res.clearCookie("connect.sid", { path: "/" });
 
+    // connect.sid 쿠키 삭제
+    res.clearCookie("connect.sid", {
+      path: "/",
+      domain: "localhost", // 도메인과 경로를 정확히 지정
+    });
+
+    // _csrf 쿠키 삭제
+    res.clearCookie("_csrf", {
+      path: "/",
+      domain: "localhost", // 도메인과 경로를 정확히 지정
+    });
+
+    // 로그아웃 성공 응답 전송
     res.json({
       resultCode: "S-1",
       msg: "로그아웃 성공",
@@ -149,7 +167,7 @@ const logout = (req, res) => {
 };
 /* end 사용자 로그아웃 */
 
-/* 비밀번호 재설정 */
+/* 비밀번호 재설정 요청 */
 const requestPasswordReset = async (req, res) => {
   try {
     const { email } = req.body;
@@ -185,12 +203,42 @@ const requestPasswordReset = async (req, res) => {
       [token, resetTokenExpiry, user.id]
     );
 
-    // 이메일 전송 로직 추가 (예: nodemailer)
+    // Nodemailer 설정
+    const transporter = nodemailer.createTransport({
+      host: "smtp.naver.com", // 네이버 SMTP 서버
+      port: 587, // SMTP 포트 (STARTTLS를 사용하는 경우 587)
+      secure: false, // true for 465, false for other ports
+      auth: {
+        user: process.env.EMAIL_USER, // 네이버 이메일 주소
+        pass: process.env.EMAIL_PASS, // 네이버 이메일 비밀번호 또는 앱 비밀번호
+      },
+    });
 
-    res.json({
-      resultCode: "S-1",
-      msg: "비밀번호 재설정 요청 성공. 이메일을 확인하세요.",
-      token: token, // 응답에 토큰 포함 (개발 및 테스트용)
+    // 비밀번호 재설정 링크
+    const resetUrl = `http://localhost:3000/reset-password/${token}`;
+
+    // 이메일 옵션
+    const mailOptions = {
+      from: "noreply@yourdomain.com",
+      to: email,
+      subject: "비밀번호 재설정 요청",
+      text: `비밀번호 재설정을 위해 아래 링크를 클릭하세요:\n\n${resetUrl}\n\n이 링크는 1시간 후 만료됩니다.`,
+    };
+    // 이메일 전송
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.error("Error sending email:", error);
+        return res.status(500).json({
+          resultCode: "F-1",
+          msg: "이메일 전송 중 오류가 발생했습니다.",
+        });
+      } else {
+        console.log("Email sent: " + info.response);
+        res.json({
+          resultCode: "S-1",
+          msg: "비밀번호 재설정 링크가 이메일로 전송되었습니다.",
+        });
+      }
     });
   } catch (error) {
     console.error("Error requesting password reset:", error);
@@ -201,7 +249,7 @@ const requestPasswordReset = async (req, res) => {
     });
   }
 };
-/* end 비밀번호 재설정  */
+/* end 비밀번호 재설정 요청  */
 
 /* 실제 비밀번호 재설정  */
 const resetPassword = async (req, res) => {
