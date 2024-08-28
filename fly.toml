@@ -1,4 +1,4 @@
-# fly.toml app configuration file generated for makterback on 2024-05-28T20:43:44+09:00
+# fly.toml app configuration file generated for makterback on 2024-08-26T15:19:33+09:00
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
@@ -11,10 +11,14 @@ primary_region = 'nrt'
 [http_service]
   internal_port = 3000
   force_https = true
-  auto_stop_machines = false
+  auto_stop_machines = 'off'
   auto_start_machines = true
   min_machines_running = 0
   processes = ['app']
 
 [[vm]]
   size = 'shared-cpu-1x'
+
+[env]
+DATABASE_URL = "postgresql://makterdb.flycast"
+SESSION_SECRET = "fae7a1f648e2e2d35b0e9c9f27c12a2a02430d658b1c4848b6c87903f68a4dbe"

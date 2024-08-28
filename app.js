@@ -3,8 +3,6 @@ import cors from "cors";
 import pkg from "pg";
 import dotenv from "dotenv";
 import session from "express-session";
-import csrf from "csurf";
-import cookieParser from "cookie-parser"; // 쿠키 파서 추가
 
 // 컨트롤러 임포트
 import restCtrl from "./app/src/restaurants/restaurants.ctrl.js";
@@ -20,7 +18,7 @@ dotenv.config();
 const pool = new Pool({
   user: "postgres",
   password: "qAH7KXJjlLFpgH6",
-  host: "127.0.0.1",
+  host: "makterdb.internal",
   database: "postgres",
   port: 5432,
 });
@@ -29,15 +27,13 @@ const app = express();
 
 // 기본 설정
 app.use(express.json());
-app.use(express.urlencoded({ extended: true })); // bodyParser.urlencoded 대신 사용
-app.use(cookieParser()); // 쿠키 파서 설정
 
 app.use(
   cors({
-    origin: "http://localhost:5173", // 클라이언트의 도메인 및 포트
+    origin: "http://localhost:5173", // 클라이언트가 실행 중인 도메인 및 포트
     methods: ["GET", "POST", "DELETE", "PUT"],
     credentials: true, // 쿠키 포함 여부
-    allowedHeaders: ["Content-Type", "Authorization", "token", "X-CSRF-Token"],
+    allowedHeaders: ["Content-Type", "Authorization", "token"],
   })
 );
 
@@ -46,23 +42,21 @@ app.use(
   session({
     secret: process.env.SESSION_SECRET || "your-secret-key",
     resave: false,
-    saveUninitialized: false,
+    saveUninitialized: false, // 초기화되지 않은 세션도 저장할지 여부
     cookie: {
-      secure: process.env.NODE_ENV === "production",
-      httpOnly: true,
-      sameSite: "Lax", // Lax, Strict, None 중 선택 (테스트 환경에 따라 None으로 설정)
-      maxAge: 1000 * 60 * 60 * 1, // 1시간 동안 세션 유지 (1000ms * 60s * 60m)
+      secure: process.env.NODE_ENV === "production", // 프로덕션 환경에서는 true
+      httpOnly: true, // 자바스크립트에서 쿠키 접근 불가
+      sameSite: "Lax", // CSRF 보호
+      maxAge: 1000 * 60 * 60 * 24 * 7, // 1주일
     },
   })
 );
 
-// CSRF 보호 미들웨어 설정
-const csrfProtection = csrf({ cookie: true });
-app.use(csrfProtection);
-
-// CSRF 토큰을 클라이언트에 제공하는 엔드포인트 추가
-app.get("/api/v1/csrf-token", (req, res) => {
-  res.json({ csrfToken: req.csrfToken() });
+app.use((req, res, next) => {
+  res.on("finish", () => {
+    console.log("Response Headers:", res.getHeaders());
+  });
+  next();
 });
 
 // 로그인 체크 미들웨어
@@ -88,7 +82,7 @@ app.get("/api/v1/restaurants/reviews", reviewCtrl.restreview);
 app.get("/api/tags", reviewCtrl.getHashtags);
 app.post("/api/v1/register", userCtrl.register);
 app.post("/api/v1/login", userCtrl.login);
-app.post("/api/v1/logout", csrfProtection, userCtrl.logout);
+app.post("/api/v1/logout", userCtrl.logout);
 app.post("/api/v1/reset-password", userCtrl.requestPasswordReset);
 app.post("/api/v1/reset-password/:token", userCtrl.resetPassword);
 app.get("/api/v1/check-session", userCtrl.checkSession);
