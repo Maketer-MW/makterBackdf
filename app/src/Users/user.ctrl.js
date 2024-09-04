@@ -79,6 +79,7 @@ const login = async (req, res) => {
     }
 
     req.session.userId = user.id;
+
     req.session.save((err) => {
       if (err) {
         return res.status(500).json({
@@ -99,6 +100,7 @@ const login = async (req, res) => {
           created_at: user.created_at,
         },
         sessionId: req.sessionID,
+        session: req.session,
       });
     });
   } catch (error) {
@@ -325,17 +327,21 @@ const updateProfile = async (req, res) => {
 };
 /* end 사용자 프로필 수정 */
 
-/* 사용자 세션 상태 확인 */
+/* 사용자 세션 상태 유지*/
 const checkSession = (req, res) => {
+  console.log("Session Data:", req.session); // 세션 데이터를 확인하기 위한 로그
+
   if (req.session && req.session.userId) {
-    // 세션이 존재하고 사용자 ID가 세션에 저장되어 있는 경우
     res.json({
       resultCode: "S-1",
       msg: "세션이 유효합니다.",
       isAuthenticated: true,
+      user: {
+        id: req.session.userId,
+        // 필요한 다른 사용자 정보도 추가할 수 있음
+      },
     });
   } else {
-    // 세션이 없거나 만료된 경우
     res.status(401).json({
       resultCode: "F-2",
       msg: "세션이 만료되었거나 유효하지 않습니다.",
@@ -344,7 +350,7 @@ const checkSession = (req, res) => {
   }
 };
 
-/* 사용자 세션 상태 확인 */
+/* end 사용자 세션 상태 유지*/
 export default {
   register,
   login,

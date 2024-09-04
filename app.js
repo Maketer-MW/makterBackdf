@@ -44,9 +44,9 @@ app.use(
     resave: false,
     saveUninitialized: false, // 초기화되지 않은 세션도 저장할지 여부
     cookie: {
-      secure: process.env.NODE_ENV === "production", // 프로덕션 환경에서는 true
+      secure: false, // 개발 환경에서는 false로 설정
       httpOnly: true, // 자바스크립트에서 쿠키 접근 불가
-      sameSite: "Lax", // CSRF 보호
+      sameSite: "None", // 개발 환경에서 쿠키가 크로스 도메인 요청에서 전송되도록 설정
       maxAge: 1000 * 60 * 60 * 24 * 7, // 1주일
     },
   })
