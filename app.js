@@ -44,7 +44,7 @@ app.use(
     resave: false,
     saveUninitialized: false, // 초기화되지 않은 세션도 저장할지 여부
     cookie: {
-      secure: false, // 개발 환경에서는 false로 설정
+      secure: process.env.NODE_ENV === "production", // 배포 환경에서 HTTPS로만 전송
       httpOnly: true, // 자바스크립트에서 쿠키 접근 불가
       sameSite: "None", // 개발 환경에서 쿠키가 크로스 도메인 요청에서 전송되도록 설정
       maxAge: 1000 * 60 * 60 * 24 * 7, // 1주일

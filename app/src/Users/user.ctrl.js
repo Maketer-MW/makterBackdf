@@ -15,6 +15,19 @@ const register = async (req, res) => {
       });
     }
 
+    // 사용자 이름 중복 체크
+    const { rows: existingUsers } = await pool.query(
+      `SELECT id FROM users WHERE username = $1 OR email = $2`,
+      [username, email]
+    );
+
+    if (existingUsers.length > 0) {
+      return res.status(400).json({
+        resultCode: "F-2",
+        msg: "이미 사용 중인 사용자 이름 또는 이메일입니다.",
+      });
+    }
+
     console.log("Received Data:", req.body); // 입력 값 확인을 위한 로그
 
     // 비밀번호 해싱
