@@ -4,6 +4,8 @@
     "connect-pg-simple": "^9.0.1",
     "connect-redis": "^7.1.1",
     "cookie-parser": "^1.4.6",
+    "coolsms-node-sdk": "^2.1.0",
+    "coolsms-rest-sdk": "^1.0.8",
     "cors": "^2.8.5",
     "csurf": "^1.11.0",
     "dotenv": "^16.4.5",
@@ -15,7 +17,8 @@
     "nodemailer": "^6.9.14",
     "nodemon": "^3.1.0",
     "pg": "^8.11.3",
-    "redis": "^4.7.0"
+    "redis": "^4.7.0",
+    "solapi": "^5.3.1"
   },
   "type": "module",
   "devDependencies": {

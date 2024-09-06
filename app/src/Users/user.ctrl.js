@@ -1,6 +1,86 @@
 import { pool } from "../../../app.js";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
+import pkg from "solapi"; // solapi 모듈 전체를 임포트
+import dotenv from "dotenv";
+dotenv.config();
+
+const { SolapiMessageService } = pkg; // 필요한 서비스만 가져옴
+
+// SOLAPI 초기화
+const messageService = new SolapiMessageService(
+  "NCS0ULSHJPTIBFOF",
+  "CAWEIM1GEFYKWTJFXTNZSGZTWFVWK8XC"
+);
+// 전화번호 인증코드 발송
+const sendVerificationCode = async (req, res) => {
+  const { phone_number } = req.body;
+
+  // 전화번호 확인
+  if (!phone_number) {
+    return res.status(400).json({
+      resultCode: "F-1",
+      msg: "전화번호가 누락되었습니다.",
+    });
+  }
+
+  // 6자리 인증코드 생성
+  const verificationCode = Math.floor(
+    100000 + Math.random() * 900000
+  ).toString();
+
+  try {
+    const response = await messageService.send({
+      to: phone_number,
+      from: "010-4178-1968",
+      text: `인증코드: ${verificationCode}`,
+    });
+
+    console.log("CoolSMS API Response:", response); // CoolSMS 응답 출력
+
+    if (response.error_list && response.error_list.length > 0) {
+      console.error("CoolSMS API Error:", response.error_list); // 에러 리스트 출력
+      return res.status(500).json({
+        resultCode: "F-2",
+        msg: "SMS 전송 중 에러가 발생했습니다.",
+        error: response.error_list,
+      });
+    }
+
+    return res.status(200).json({
+      resultCode: "S-1",
+      msg: "인증코드가 성공적으로 전송되었습니다.",
+      verificationCode,
+    });
+  } catch (error) {
+    console.error("Unexpected Error:", error); // 예외 처리
+    return res.status(500).json({
+      resultCode: "F-1",
+      msg: "서버 에러 발생",
+      error: error.message,
+    });
+  }
+};
+
+// 인증코드 검증
+const verifyCode = (req, res) => {
+  const { verificationCode, inputCode } = req.body;
+
+  console.log("Stored code:", verificationCode); // 서버에서 저장된 인증코드
+  console.log("User input code:", inputCode); // 사용자가 입력한 인증코드
+
+  if (verificationCode !== inputCode) {
+    return res.status(400).json({
+      resultCode: "F-1",
+      msg: "인증코드가 일치하지 않습니다.",
+    });
+  }
+
+  return res.status(200).json({
+    resultCode: "S-1",
+    msg: "인증이 완료되었습니다.",
+  });
+};
 
 /* 사용자 회원가입 */
 const register = async (req, res) => {
@@ -373,4 +453,6 @@ export default {
   requestPasswordReset,
   resetPassword,
   checkSession,
+  sendVerificationCode,
+  verifyCode,
 };

@@ -71,46 +71,92 @@ const isLoggedIn = (req, res, next) => {
   }
 };
 
-// API 라우트 정의
-app.get("/api/v1/restaurants", restCtrl.restrs);
-app.get("/api/v1/restaurants/:restaurants_id", restCtrl.restr);
-app.get("/api/v1/restaurants/category/:category", restCtrl.restc);
-app.post("/api/v1/reviews", isLoggedIn, reviewCtrl.createreview);
-app.delete("/api/v1/reviews/:review_id", isLoggedIn, reviewCtrl.deletereview);
-app.get("/api/v1/reviews/:restaurant_id", reviewCtrl.getReviews);
-app.get("/api/v1/restaurants/reviews", reviewCtrl.restreview);
-app.get("/api/tags", reviewCtrl.getHashtags);
-app.post("/api/v1/register", userCtrl.register);
-app.post("/api/v1/login", userCtrl.login);
-app.post("/api/v1/logout", userCtrl.logout);
-app.post("/api/v1/reset-password", userCtrl.requestPasswordReset);
-app.post("/api/v1/reset-password/:token", userCtrl.resetPassword);
-app.get("/api/v1/check-session", userCtrl.checkSession);
-app.get("/api/v1/profile", isLoggedIn, userCtrl.getProfile);
-app.put("/api/v1/profile", isLoggedIn, userCtrl.updateProfile);
-app.get("/api/v1/posts", CumintyCtrl.posts);
-app.get("/api/v1/post/:post_id", CumintyCtrl.post);
-app.post("/api/v1/post", isLoggedIn, CumintyCtrl.createpost);
-app.put("/api/v1/post/:post_id", isLoggedIn, CumintyCtrl.remotepost);
-app.delete("/api/v1/post/:post_id", isLoggedIn, CumintyCtrl.deletepost);
-app.get("/api/v1/comments", CommentsCtrl.comments);
-app.get("/api/v1/comments/:commentId", CommentsCtrl.comment);
+/**
+ * =========================
+ * 1. 레스토랑 관련 API
+ * =========================
+ */
+app.get("/api/v1/restaurants", restCtrl.restrs); // 모든 레스토랑 조회
+app.get("/api/v1/restaurants/:restaurants_id", restCtrl.restr); // 특정 레스토랑 조회
+app.get("/api/v1/restaurants/category/:category", restCtrl.restc); // 카테고리별 레스토랑 조회
+
+/**
+ * =========================
+ * 2. 리뷰 관련 API
+ * =========================
+ */
+app.post("/api/v1/reviews", isLoggedIn, reviewCtrl.createreview); // 리뷰 생성 (로그인 필요)
+app.delete("/api/v1/reviews/:review_id", isLoggedIn, reviewCtrl.deletereview); // 리뷰 삭제 (로그인 필요)
+app.get("/api/v1/reviews/:restaurant_id", reviewCtrl.getReviews); // 특정 레스토랑의 리뷰 조회
+app.get("/api/v1/restaurants/reviews", reviewCtrl.restreview); // 레스토랑 리뷰 조회
+app.get("/api/tags", reviewCtrl.getHashtags); // 해시태그 조회
+
+/**
+ * =========================
+ * 3. 사용자 (회원) 관련 API
+ * =========================
+ */
+app.post("/api/v1/register", userCtrl.register); // 회원가입
+app.post("/api/v1/login", userCtrl.login); // 로그인
+app.post("/api/v1/logout", userCtrl.logout); // 로그아웃
+app.post("/api/v1/reset-password", userCtrl.requestPasswordReset); // 비밀번호 재설정 요청
+app.post("/api/v1/reset-password/:token", userCtrl.resetPassword); // 비밀번호 재설정
+app.get("/api/v1/check-session", userCtrl.checkSession); // 세션 상태 확인
+app.get("/api/v1/profile", isLoggedIn, userCtrl.getProfile); // 프로필 조회 (로그인 필요)
+app.put("/api/v1/profile", isLoggedIn, userCtrl.updateProfile); // 프로필 수정 (로그인 필요)
+
+/**
+ * =========================
+ * 4. SOLAPI API 관련 API
+ * =========================
+ */
+app.post("/api/v1/send-verification-code", userCtrl.sendVerificationCode); // SMS 인증코드 전송
+app.post("/api/v1/verify-code", userCtrl.verifyCode); // SMS 인증코드 확인
+
+/**
+ * =========================
+ * 5. 커뮤니티 게시글 관련 API
+ * =========================
+ */
+app.get("/api/v1/posts", CumintyCtrl.posts); // 게시글 전체 조회
+app.get("/api/v1/post/:post_id", CumintyCtrl.post); // 특정 게시글 조회
+app.post("/api/v1/post", isLoggedIn, CumintyCtrl.createpost); // 게시글 작성 (로그인 필요)
+app.put("/api/v1/post/:post_id", isLoggedIn, CumintyCtrl.remotepost); // 게시글 수정 (로그인 필요)
+app.delete("/api/v1/post/:post_id", isLoggedIn, CumintyCtrl.deletepost); // 게시글 삭제 (로그인 필요)
+
+/**
+ * =========================
+ * 6. 댓글 관련 API
+ * =========================
+ */
+app.get("/api/v1/comments", CommentsCtrl.comments); // 모든 댓글 조회
+app.get("/api/v1/comments/:commentId", CommentsCtrl.comment); // 특정 댓글 조회
 app.post(
   "/api/v1/post/:post_id/comments",
   isLoggedIn,
   CommentsCtrl.createcomment
-);
+); // 댓글 작성 (로그인 필요)
 app.delete(
   "/api/v1/post/:post_id/comments/:commentid",
   isLoggedIn,
   CommentsCtrl.deletecomment
-);
-app.get("/api/v1/post/:postId/comments", CommentsCtrl.getCommentsByPostId);
+); // 댓글 삭제 (로그인 필요)
+app.get("/api/v1/post/:postId/comments", CommentsCtrl.getCommentsByPostId); // 특정 게시글의 댓글 조회
 
+/**
+ * =========================
+ * 7. 기본 라우트
+ * =========================
+ */
 app.get("/", (req, res) => {
   res.send("Hello World!");
 });
 
+/**
+ * =========================
+ * 서버 실행
+ * =========================
+ */
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
