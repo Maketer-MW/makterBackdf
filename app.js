@@ -28,27 +28,29 @@ const app = express();
 // 기본 설정
 app.use(express.json());
 
-app.use(
-  cors({
-    origin: "http://localhost:5173", // 클라이언트가 실행 중인 도메인 및 포트
-    methods: ["GET", "POST", "DELETE", "PUT"],
-    credentials: true, // 쿠키 포함 여부
-    allowedHeaders: ["Content-Type", "Authorization", "token"],
-  })
-);
+app.set("trust proxy", 1); // 프록시 신뢰 설정
 
 // express-session 미들웨어 설정
 app.use(
   session({
     secret: process.env.SESSION_SECRET || "your-secret-key",
     resave: false,
-    saveUninitialized: false, // 초기화되지 않은 세션도 저장할지 여부
+    saveUninitialized: true,
     cookie: {
-      secure: process.env.NODE_ENV === "production", // 배포 환경에서 HTTPS로만 전송
-      httpOnly: true, // 자바스크립트에서 쿠키 접근 불가
-      sameSite: "None", // 개발 환경에서 쿠키가 크로스 도메인 요청에서 전송되도록 설정
+      secure: process.env.NODE_ENV === "production", // 프로덕션에서만 secure 사용
+      httpOnly: true,
+      sameSite: process.env.NODE_ENV === "production" ? "lax" : "none", // 개발 환경에서는 none
       maxAge: 1000 * 60 * 60 * 24 * 7, // 1주일
     },
+  })
+);
+
+app.use(
+  cors({
+    origin: "http://localhost:5173", // 클라이언트가 실행 중인 도메인 및 포트
+    methods: ["GET", "POST", "DELETE", "PUT"],
+    credentials: true, // 쿠키 포함 여부
+    allowedHeaders: ["Content-Type", "Authorization", "token"],
   })
 );
 

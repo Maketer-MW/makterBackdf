@@ -164,6 +164,7 @@ const login = async (req, res) => {
 
     const user = rows[0];
     const match = await bcrypt.compare(password, user.password);
+
     if (!match) {
       return res.status(401).json({
         resultCode: "F-2",
@@ -193,7 +194,6 @@ const login = async (req, res) => {
           created_at: user.created_at,
         },
         sessionId: req.sessionID,
-        session: req.session,
       });
     });
   } catch (error) {
