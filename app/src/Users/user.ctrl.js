@@ -174,14 +174,18 @@ const login = async (req, res) => {
 
     req.session.userId = user.id;
 
+    req.session.userId = user.id;
+
     req.session.save((err) => {
       if (err) {
+        console.error("세션 저장 중 에러 발생:", err);
         return res.status(500).json({
           resultCode: "F-1",
           msg: "세션 저장 중 에러 발생",
         });
       }
 
+      // 세션 저장 성공 후 응답
       res.json({
         resultCode: "S-1",
         msg: "로그인 성공",
@@ -422,20 +426,21 @@ const updateProfile = async (req, res) => {
 
 /* 사용자 세션 상태 유지*/
 const checkSession = (req, res) => {
-  console.log("Session Data:", req.session); // 세션 데이터를 확인하기 위한 로그
+  console.log("세션 데이터 확인:", req.session); // 세션 데이터 확인
 
   if (req.session && req.session.userId) {
-    res.json({
+    console.log("세션 유효함. 사용자 ID:", req.session.userId);
+    return res.status(200).json({
       resultCode: "S-1",
       msg: "세션이 유효합니다.",
       isAuthenticated: true,
       user: {
         id: req.session.userId,
-        // 필요한 다른 사용자 정보도 추가할 수 있음
+        // 필요시 추가 정보
       },
     });
   } else {
-    res.status(401).json({
+    return res.status(401).json({
       resultCode: "F-2",
       msg: "세션이 만료되었거나 유효하지 않습니다.",
       isAuthenticated: false,

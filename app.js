@@ -35,11 +35,11 @@ app.use(
   session({
     secret: process.env.SESSION_SECRET || "your-secret-key",
     resave: false,
-    saveUninitialized: true,
+    saveUninitialized: false,
     cookie: {
-      secure: process.env.NODE_ENV === "production", // 프로덕션에서만 secure 사용
-      httpOnly: true,
-      sameSite: process.env.NODE_ENV === "production" ? "lax" : "none", // 개발 환경에서는 none
+      secure: process.env.NODE_ENV === "production", // HTTPS 환경에서만 secure 쿠키 허용
+      httpOnly: true, // 클라이언트에서 쿠키 접근 불가
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // 개발 환경에서는 lax, 배포 환경에서는 none
       maxAge: 1000 * 60 * 60 * 24 * 7, // 1주일
     },
   })
@@ -47,10 +47,9 @@ app.use(
 
 app.use(
   cors({
-    origin: "http://localhost:5173", // 클라이언트가 실행 중인 도메인 및 포트
-    methods: ["GET", "POST", "DELETE", "PUT"],
-    credentials: true, // 쿠키 포함 여부
-    allowedHeaders: ["Content-Type", "Authorization", "token"],
+    origin: "http://localhost:5173", // 클라이언트가 실행 중인 도메인
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true, // 세션 쿠키 포함 허용
   })
 );
 
