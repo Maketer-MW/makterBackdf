@@ -68,7 +68,7 @@ const createpost = async (req, res) => {
       VALUES ($1, $2, $3)
       RETURNING *
     `;
-    const values = [post_title, post_content, post_date || new Date(), userId];
+    const values = [post_title, post_content, post_date];
 
     const { rows } = await pool.query(query, values);
     console.log("Query Result:", rows); // 쿼리 결과 확인을 위한 로그
@@ -95,6 +95,13 @@ const createpost = async (req, res) => {
 };
 
 const remotepost = async (req, res) => {
+  if (!req.session || !req.session.userId) {
+    return res.status(401).json({
+      resultCode: "F-2",
+      msg: "로그인이 필요합니다.",
+    });
+  }
+
   try {
     const { postId, post_title, post_content, post_date } = req.body;
 
@@ -136,6 +143,13 @@ const remotepost = async (req, res) => {
 
 // 삭제
 const deletepost = async (req, res) => {
+  if (!req.session || !req.session.userId) {
+    return res.status(401).json({
+      resultCode: "F-2",
+      msg: "로그인이 필요합니다.",
+    });
+  }
+
   try {
     const { post_id } = req.params;
     const { rows } = await pool.query(

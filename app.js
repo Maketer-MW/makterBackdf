@@ -38,7 +38,7 @@ app.use(
     saveUninitialized: false,
     cookie: {
       secure: process.env.NODE_ENV === "production", // HTTPS 환경에서만 secure 쿠키 허용
-      httpOnly: true, // 클라이언트에서 쿠키 접근 불가
+      httpOnly: false, // 클라이언트에서 쿠키 접근 불가
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // 개발 환경에서는 lax, 배포 환경에서는 none
       maxAge: 1000 * 60 * 60 * 24 * 7, // 1주일
     },

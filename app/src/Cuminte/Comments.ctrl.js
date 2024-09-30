@@ -65,7 +65,7 @@ const createcomment = async (req, res) => {
           VALUES ($1, $2,$3)
           RETURNING *
         `;
-    const values = [postId, comment_text, comment_date || new Date(), userId];
+    const values = [postId, comment_text, comment_date];
 
     const { rows } = await pool.query(query, values);
     console.log("Query Result:", rows); // 쿼리 결과 확인을 위한 로그
@@ -93,6 +93,13 @@ const createcomment = async (req, res) => {
 
 // 삭제
 const deletecomment = async (req, res) => {
+  if (!req.session || !req.session.userId) {
+    return res.status(401).json({
+      resultCode: "F-2",
+      msg: "로그인이 필요합니다.",
+    });
+  }
+
   const { post_id, commentid } = req.params;
 
   // 클라이언트에서 올바른 값을 전달하는지 확인
