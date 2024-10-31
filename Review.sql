@@ -6,6 +6,7 @@ CREATE TABLE reviews (
    date DATE NOT NULL,
    rating numeric not null,
    restaurant_id INT NOT NULL REFERENCES restaurants(restaurants_id)
+   author_id UUID NOT NULL REFERENCES users(user_id) 
 );
 
 

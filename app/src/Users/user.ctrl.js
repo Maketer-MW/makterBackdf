@@ -173,8 +173,7 @@ const login = async (req, res) => {
     }
 
     req.session.userId = user.id;
-
-    req.session.userId = user.id;
+    req.session.fullName = user.full_name;
 
     req.session.save((err) => {
       if (err) {
@@ -193,7 +192,7 @@ const login = async (req, res) => {
           id: user.id,
           username: user.username,
           email: user.email,
-          full_name: user.full_name,
+          fullName: user.full_name,
           phone_number: user.phone_number,
           created_at: user.created_at,
         },
@@ -212,7 +211,6 @@ const login = async (req, res) => {
 
 /* 사용자 로그아웃 */
 const logout = (req, res) => {
-  // 세션 파괴
   req.session.destroy((err) => {
     if (err) {
       return res.status(500).json({
@@ -221,8 +219,12 @@ const logout = (req, res) => {
       });
     }
 
-    // 클라이언트 측 쿠키를 삭제
-    res.clearCookie("connect.sid", { path: "/" });
+    res.clearCookie("connect.sid", {
+      path: "/",
+      secure: process.env.NODE_ENV === "production", // HTTPS 환경에서만 secure 쿠키 허용
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // 개발 환경에서는 lax, 배포 환경에서는 none
+      maxAge: 0, // 쿠키 즉시 만료
+    });
 
     console.log("세션이 성공적으로 파괴되었습니다.");
     res.json({
@@ -425,20 +427,54 @@ const updateProfile = async (req, res) => {
 /* end 사용자 프로필 수정 */
 
 /* 사용자 세션 상태 유지*/
-const checkSession = (req, res) => {
+/* 사용자 세션 상태 유지 */
+const checkSession = async (req, res) => {
   console.log("세션 데이터 확인:", req.session); // 세션 데이터 확인
 
   if (req.session && req.session.userId) {
-    console.log("세션 유효함. 사용자 ID:", req.session.userId);
-    return res.status(200).json({
-      resultCode: "S-1",
-      msg: "세션이 유효합니다.",
-      isAuthenticated: true,
-      user: {
-        id: req.session.userId,
-        // 필요시 추가 정보
-      },
-    });
+    try {
+      // 데이터베이스에서 사용자 정보 조회
+      const { rows } = await pool.query(
+        `
+          SELECT id, username, email, full_name, phone_number, created_at
+          FROM users
+          WHERE id = $1
+        `,
+        [req.session.userId]
+      );
+
+      if (rows.length === 0) {
+        return res.status(401).json({
+          resultCode: "F-2",
+          msg: "세션이 만료되었거나 유효하지 않습니다.",
+          isAuthenticated: false,
+        });
+      }
+
+      const user = rows[0];
+
+      console.log("세션 유효함. 사용자 ID:", req.session.userId);
+      return res.status(200).json({
+        resultCode: "S-1",
+        msg: "세션이 유효합니다.",
+        isAuthenticated: true,
+        user: {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          full_name: user.full_name,
+          phone_number: user.phone_number,
+          created_at: user.created_at,
+        },
+      });
+    } catch (error) {
+      console.error("세션 확인 중 에러 발생:", error);
+      return res.status(500).json({
+        resultCode: "F-1",
+        msg: "서버 에러 발생",
+        isAuthenticated: false,
+      });
+    }
   } else {
     return res.status(401).json({
       resultCode: "F-2",
@@ -447,6 +483,7 @@ const checkSession = (req, res) => {
     });
   }
 };
+/* end 사용자 세션 상태 유지 */
 
 /* end 사용자 세션 상태 유지*/
 export default {
