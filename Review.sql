@@ -6,8 +6,9 @@ CREATE TABLE reviews (
    date DATE NOT NULL,
    rating numeric not null,
    restaurant_id INT NOT NULL REFERENCES restaurants(restaurants_id)
-   author_id UUID NOT NULL REFERENCES users(user_id) 
 );
+-- 로그인한 사용자의 ID 정보도 같이저장 
+ADD COLUMN author_id INT REFERENCES users(id);
 
 
 -- hashtags(해시태그) 테이블 생성
