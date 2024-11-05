@@ -173,7 +173,7 @@ const login = async (req, res) => {
     }
 
     req.session.userId = user.id;
-    req.session.fullName = user.full_name;
+    req.session.username = user.username;
 
     req.session.save((err) => {
       if (err) {

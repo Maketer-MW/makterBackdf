@@ -1,13 +1,24 @@
 -- users 테이블 생성
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
-CREATE TABLE users(
-   user_id uuid PRIMARY KEY DEFAULT
-   uuid_generate_v4(),
-   user_name VARCHAR(255) NOT NULL,
-   user_email VARCHAR(255) NOT NULL,
-   user_password VARCHAR(255) NOT NULL
+-- users 테이블 생성
+CREATE TABLE users (
+  id SERIAL PRIMARY KEY,
+  username VARCHAR(100) NOT NULL UNIQUE,
+  password VARCHAR(100) NOT NULL,
+  email VARCHAR(100) NOT NULL UNIQUE,
+  full_name VARCHAR(100),
+  phone_number VARCHAR(20),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+-- 추가 속성
+ALTER TABLE users
+ADD COLUMN reset_password_token VARCHAR(100),
+ADD COLUMN reset_password_expiry TIMESTAMP;
+
+-- 유저들의 id를 저장해둘 username 속성이름을 보다 명확하게 변환 username -> user_id
+ALTER TABLE users RENAME COLUMN username TO user_id;
+
 
 -- 가짜 유저 삽입 
 insert into users (user_name, user_email,user_password) values ('김헨리','henry123@naver.com', '1234')
@@ -62,7 +73,7 @@ VALUES
 
 
 
--- reviews 테이블 생성
+-- reviews 테이블 생성x
 CREATE TABLE reviews (
    id SERIAL PRIMARY KEY,
    username VARCHAR(100) NOT NULL,
@@ -71,6 +82,8 @@ CREATE TABLE reviews (
    rating numeric not null,
    restaurant_id INT NOT NULL REFERENCES restaurants(restaurants_id)
 );
+-- 로그인한 사용자의 ID 정보도 같이저장 
+ADD COLUMN author_id INT REFERENCES users(id);
 
 
 -- hashtags(해시태그) 테이블 생성
@@ -118,6 +131,13 @@ INNER JOIN
 INNER JOIN
     hashtags as h ON rh.hashtags_id = h.id;
 
+
+-- reveiw_photos 테이블 생성
+CREATE TABLE review_photos (
+   id SERIAL PRIMARY KEY,
+   review_id INT REFERENCES reviews(id) ON DELETE CASCADE,
+   photo_url VARCHAR(255) NOT NULL
+);
 
 -- posts 테이블 생성
 CREATE TABLE posts (

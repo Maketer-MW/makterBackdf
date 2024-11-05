@@ -11,7 +11,7 @@ const createreview = async (req, res) => {
 
   try {
     const { restaurant_id, contents, rating, hashtags } = req.body;
-    const fullName = req.session.fullName; // 세션에서 full_name 가져오기
+    const username = req.session.username;
     const userId = req.session.userId; // 세션에서 userId 가져오기
     const date = new Date().toISOString().slice(0, 10);
 
@@ -22,7 +22,7 @@ const createreview = async (req, res) => {
         VALUES ($1, $2, $3, $4, $5, $6)
         RETURNING id
       `,
-      [restaurant_id, fullName, contents, date, rating, userId]
+      [restaurant_id, username, contents, date, rating, userId]
     );
 
     // 리뷰테이블과 해시테이블이 별도로 존재 둘을 결합해주기 위해서 리뷰생성후 생성된 id를 저장한 변수 reviewId
@@ -84,54 +84,39 @@ const createreview = async (req, res) => {
 // 리뷰 삭제
 const deletereview = async (req, res) => {
   try {
-    const userId = req.session.userId;
-    const { review_id } = req.params;
+    const userId = req.session.userId; // 로그인된 사용자 ID
+    const { review_id } = req.params; // 삭제할 리뷰 ID
 
-    // 1. 리뷰가 존재하는지 확인하고 작성자 ID를 가져오기
-    const { rows: reviewRows } = await pool.query(
-      `SELECT author_id FROM reviews WHERE id = $1`,
-      [review_id]
-    );
-
-    if (reviewRows.length === 0) {
-      // 리뷰가 존재하지 않을 경우
-      return res.status(404).json({
-        resultCode: "F-1",
-        msg: "해당 리뷰를 찾을 수 없습니다.",
-      });
-    }
-
-    // 2. 작성자와 로그인된 사용자가 일치하는지 확인
-    if (reviewRows[0].author_id !== userId) {
-      // 작성자가 다를 경우
-      return res.status(403).json({
-        resultCode: "F-2",
-        msg: "본인이 작성한 리뷰만 삭제할 수 있습니다.",
-      });
-    }
-
+    // 리뷰 삭제 쿼리: 작성자와 로그인된 사용자가 일치할 경우에만 삭제
     const { rows } = await pool.query(
-      "DELETE FROM reviews WHERE id = $1 RETURNING *",
-      [review_id]
+      `
+      DELETE FROM reviews 
+      WHERE id = $1 AND author_id = $2
+      RETURNING *
+      `,
+      [review_id, userId]
     );
 
     if (rows.length > 0) {
-      res.json({
+      // 삭제 성공
+      return res.json({
         resultCode: "S-1",
         msg: "리뷰가 성공적으로 삭제되었습니다.",
         data: rows[0],
       });
     } else {
-      res.status(404).json({
-        resultCode: "F-1",
-        msg: "해당 리뷰를 찾을 수 없습니다.",
+      // 삭제할 리뷰가 없거나 권한이 없는 경우
+      return res.status(403).json({
+        resultCode: "F-2",
+        msg: "삭제할 리뷰를 찾을 수 없거나 권한이 없습니다.",
       });
     }
   } catch (error) {
     console.error("리뷰 삭제 중 오류:", error);
     res.status(500).json({
       resultCode: "F-1",
-      msg: "에러 발생",
+      msg: "서버 오류가 발생했습니다.",
+      error: error.message,
     });
   }
 };
