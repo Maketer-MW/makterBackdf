@@ -60,16 +60,18 @@ const createpost = async (req, res) => {
   }
 
   try {
-    const { post_title, post_content, post_date } = req.body;
-    const fullName = req.session.fullName; // 세션에서 full_name 가져오기
+    const { post_title, post_content } = req.body;
+    const username = req.session.username;
     const userId = req.session.userId; // 세션에서 userId 가져오기
 
+    const post_date = new Date().toISOString().slice(0, 10);
+
     const query = `
-      INSERT INTO posts (title, content, post_date, username) 
-      VALUES ($1, $2, $3, $4) 
+      INSERT INTO posts (title, content, post_date, username, author_id) 
+      VALUES ($1, $2, $3, $4, $5) 
       RETURNING *
     `;
-    const values = [post_title, post_content, post_date, fullName];
+    const values = [post_title, post_content, post_date, username, userId];
 
     const { rows } = await pool.query(query, values);
     console.log("Query Result:", rows); // 쿼리 결과 확인을 위한 로그

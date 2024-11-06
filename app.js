@@ -23,6 +23,7 @@ const pool = new Pool({
   port: 5432,
 });
 
+// makterdb.internal
 const app = express();
 
 // 기본 설정

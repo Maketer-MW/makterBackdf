@@ -154,7 +154,7 @@ const getReviews = async (req, res) => {
       WHERE
         r.restaurant_id = $1
       GROUP BY
-        r.id, r.username, r.contents, r.date, r.rating, r.author_id;;
+        r.id, r.username, r.contents, r.date, r.rating, r.author_id;
       `,
       [restaurant_id]
     );
