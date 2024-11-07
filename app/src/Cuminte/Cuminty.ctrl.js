@@ -104,6 +104,7 @@ const remotepost = async (req, res) => {
       msg: "로그인이 필요합니다.",
     });
   }
+  const userId = req.session.userId; // 로그인된 사용자 ID
 
   try {
     const { postId, post_title, post_content, post_date } = req.body;
@@ -114,11 +115,11 @@ const remotepost = async (req, res) => {
     const query = `
       UPDATE posts
       SET title = $1, content = $2, post_date = $3
-      WHERE post_id = $4
+      WHERE post_id = $4 AND userId = $5
       RETURNING *
     `;
 
-    const values = [post_title, post_content, actualPostDate, postId];
+    const values = [post_title, post_content, actualPostDate, postId, userId];
 
     const { rows } = await pool.query(query, values);
     console.log("Update Query Result:", rows);
@@ -155,9 +156,11 @@ const deletepost = async (req, res) => {
 
   try {
     const { post_id } = req.params;
+    const userId = req.session.userId; // 로그인된 사용자 ID
+
     const { rows } = await pool.query(
-      "DELETE FROM posts WHERE post_id = $1 RETURNING *",
-      [post_id]
+      "DELETE FROM posts WHERE post_id = $1 AND author_id = $2 RETURNING *",
+      [post_id, userId]
     );
     console.log("Delete Query Result:", rows); // 삭제 결과 확인을 위한 로그
 
