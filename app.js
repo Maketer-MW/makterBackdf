@@ -92,6 +92,7 @@ app.delete("/api/v1/reviews/:review_id", isLoggedIn, reviewCtrl.deletereview); /
 app.get("/api/v1/reviews/:restaurant_id", reviewCtrl.getReviews); // 특정 레스토랑의 리뷰 조회
 app.get("/api/v1/restaurants/reviews", reviewCtrl.restreview); // 레스토랑 리뷰 조회
 app.get("/api/tags", reviewCtrl.getHashtags); // 해시태그 조회
+app.get("/api/v1/user-reviews", isLoggedIn, reviewCtrl.userReviews); // 사용자 리뷰 조회
 
 /**
  * =========================

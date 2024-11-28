@@ -221,6 +221,56 @@ const userreview = async (req, res) => {
     });
   }
 };
+const userReviews = async (req, res) => {
+  if (!req.session || !req.session.userId) {
+    return res.status(401).json({
+      resultCode: "F-2",
+      msg: "로그인이 필요합니다.",
+    });
+  }
+
+  const userId = req.session.userId;
+
+  try {
+    const { rows } = await pool.query(
+      `
+      SELECT 
+        r.id AS review_id,
+        r.contents AS review_content,
+        r.date AS review_date,
+        r.rating,
+        res.restaurants_name AS restaurant_name,
+        array_agg(h.contents) AS hashtags
+      FROM 
+        reviews r
+      JOIN 
+        restaurants res ON r.restaurant_id = res.restaurants_id
+      LEFT JOIN 
+        reviews_hashtags rh ON r.id = rh.reviews_id
+      LEFT JOIN 
+        hashtags h ON rh.hashtags_id = h.id
+      WHERE 
+        r.author_id = $1
+      GROUP BY 
+        r.id, res.restaurants_name, r.contents, r.date, r.rating;
+      `,
+      [userId]
+    );
+
+    res.json({
+      resultCode: "S-1",
+      msg: "유저 리뷰 조회 성공",
+      data: rows,
+    });
+  } catch (error) {
+    console.error("Error fetching user reviews:", error.stack || error.message);
+    res.status(500).json({
+      resultCode: "F-1",
+      msg: "유저 리뷰 조회 실패",
+      error: error.message,
+    });
+  }
+};
 
 //식당 리뷰
 const restreview = async (req, res) => {
@@ -273,6 +323,7 @@ export default {
   deletereview,
   getReviews,
   userreview,
+  userReviews,
   restreview,
   getHashtags,
 };

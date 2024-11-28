@@ -23,6 +23,7 @@ CREATE TABLE comments (
    id SERIAL PRIMARY KEY,
    comment_text CHAR(100) NOT NULL,
    comment_date CHAR(100) NOT NULL,
-   user_id uuid NOT NULL REFERENCES users(user_id),
-   post_id INT NOT NULL REFERENCES posts(post_id)
+   username VARCHAR(100) NOT NULL,
+   author_id INT REFERENCES users(id),
+   post_id INT NOT NULL REFERENCES posts(post_id);
 );

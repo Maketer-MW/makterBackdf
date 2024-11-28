@@ -9,8 +9,8 @@ const { SolapiMessageService } = pkg; // 필요한 서비스만 가져옴
 
 // SOLAPI 초기화
 const messageService = new SolapiMessageService(
-  "NCS0ULSHJPTIBFOF",
-  "CAWEIM1GEFYKWTJFXTNZSGZTWFVWK8XC"
+  "NCSCH0ELAKJCOIUA",
+  "CCB7GHK07T4HBBND66IYR61H3EUMLLRK"
 );
 // 전화번호 인증코드 발송
 const sendVerificationCode = async (req, res) => {
@@ -32,7 +32,7 @@ const sendVerificationCode = async (req, res) => {
   try {
     const response = await messageService.send({
       to: phone_number,
-      from: "010-4178-1968",
+      from: "010-2848-5397",
       text: `인증코드: ${verificationCode}`,
     });
 
